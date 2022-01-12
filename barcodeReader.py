@@ -3,13 +3,26 @@
 
 import cv2
 import numpy as np
+import time
+from time import sleep
 from pyzbar import pyzbar
+from pixels import Pixels
+import asyncio
+import RPi.GPIO as GPIO
+from azure.iot.device.aio import IoTHubDeviceClient
+from azure.iot.device import Message
+from device_provisioning_service import Device
+import urllib.request 
+import pygame
 
-    
 class BarcodeReader():
     def __init__(self):
+        self.pixels = Pixels()
+        self.pixels.off()
+        self.lights()
         self.barcode_image = None
         self.barcode_info = None
+        self.last_read_barcode_info = None
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1080)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 960)
@@ -28,6 +41,14 @@ class BarcodeReader():
                         self.barcode_info = barcode.data.decode('utf-8')
                         if not self.barcode_info:
                             break
+                        self.pixels.off()
+                        if (self.barcode_info != self.last_read_barcode_info):
+                            self.last_read_barcode_info = self.barcode_info
+                            self.pixels.think()
+                            self.beepsound()
+                            self.getproductinfo(self.barcode_info)
+                            barcode_details = self.getproductinfo(self.barcode_info)
+                            asyncio.run(self.iotsendmsg(barcode_details))
                         font = cv2.FONT_HERSHEY_SIMPLEX
                         cv2.putText(self.barcode_image, self.barcode_info, (x + 6, y - 6), font, 1.0, (255, 0, 0), 1)
                     if self.barcode_info:
@@ -42,7 +63,48 @@ class BarcodeReader():
                 
         self.cap.release()
         cv2.destroyAllWindows()
-                    
+           
+    def lights(self):
+        self.pixels.wakeup()
+        self.pixels.think()
+        time.sleep(3)
+        self.pixels.speak()
+        time.sleep(3)
+        self.pixels.off()
+        
+    def beepsound(self):
+        pygame.mixer.init()
+        pygame.mixer.music.load('/scaniie/final/beep.wav')
+        pygame.mixer.music.play()
+
+    def pleasebeep(self):
+        GPIO.setmode(GPIO.BCM)
+        buzzTime = 0.1
+        buzzDelay = 2
+        buzzerPin = 4
+        GPIO.setup(buzzerPin, GPIO.OUT)
+        GPIO.output(buzzerPin, True)
+        sleep(buzzTime)
+        GPIO.output(buzzerPin, False)  
+            
+    async def iotsendmsg(self, msgtoaz):
+
+        connection_string = "HostName=ScaniieProd.azure-devices.net;DeviceId=scndev;SharedAccessKey=ZhVQ0tDUhgICNPL2SKwGMR9MMtIr1GdXxpkIEZjyIuA="
+        device_client = IoTHubDeviceClient.create_from_connection_string(connection_string)
+        await device_client.connect()
+        print (msgtoaz)
+        # Send the message.
+        await device_client.send_message(msgtoaz)
+        # finally, disconnect
+        await device_client.disconnect()
+
+    def getproductinfo(self, barcode):
+            request = urllib.request.urlopen('https://api.ean-search.org/api?token=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&op=barcode-lookup&format=json&ean=%s'% (barcode))    
+            response_body = request.read()
+            return(response_body.decode('utf-8'))
+
+
+                      
     def filter_frame(self):
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         blur = cv2.GaussianBlur(gray, (5, 5), 0)

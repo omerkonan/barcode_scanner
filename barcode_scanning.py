@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 from pyzbar.pyzbar import decode
 import time
-import time
 import asyncio
 from azure.iot.device.aio import IoTHubDeviceClient
 from azure.iot.device import Message
@@ -44,7 +43,6 @@ def pleasebeep():
         GPIO.output(buzzerPin, False)
 
 def beepsound():
-    import pygame
     pygame.mixer.init()
     pygame.mixer.music.load('/scaniie/final/beep.wav')
     pygame.mixer.music.play()
