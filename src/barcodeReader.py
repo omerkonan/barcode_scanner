@@ -15,24 +15,11 @@ from pixels import Pixels
 from azure.iot.device import Message
 from azure.iot.device.aio import IoTHubDeviceClient
 from device_provisioning_service import Device
-import RaspiWiFi.setup_lib as setup_lib
+from pyroute2 import IPRoute
 
 class BarcodeReader():
-    def __init__(self, btn_input, entered_ssid, wpa_enabled_choice, wpa_entered_key, auto_config_choice, auto_config_delay, server_port_choice, ssl_enabled_choice):
-        self.timeout = 6
-        self.entered_ssid = entered_ssid
-        self.wpa_enabled_choice = wpa_enabled_choice
-        self.wpa_entered_key = wpa_entered_key
-        self.auto_config_choice = auto_config_choice
-        self.auto_config_delay = auto_config_delay
-        self.server_port_choice = server_port_choice
-        self.ssl_enabled_choice = ssl_enabled_choice
-        self.btn_input = btn_input
-        GPIO.setwarnings(False) 
-        GPIO.setmode(GPIO.BOARD) 
-        GPIO.setup(self.btn_input, GPIO.IN) 
-        GPIO.add_event_detect(self.btn_input, GPIO.RISING, callback=self.buttonEventHandler_rising) 
-        GPIO.add_event_detect(self.btn_input, GPIO.FALLING, callback=self.buttonEventHandler_falling)
+    def __init__(self):
+
         self.pixels = Pixels()
         self.pixels.off()
         self.lights()
@@ -63,9 +50,13 @@ class BarcodeReader():
                             self.last_read_barcode_info = self.barcode_info
                             self.pixels.think()
                             self.beepsound()
-                            self.getproductinfo(self.barcode_info)
-                            barcode_details = self.getproductinfo(self.barcode_info)
-                            asyncio.run(self.iotsendmsg(barcode_details))
+                            is_online = get_connection_status()
+                            if (is_online):
+                                self.getproductinfo(self.barcode_info)
+                                barcode_details = self.getproductinfo(self.barcode_info)
+                                asyncio.run(self.iotsendmsg(barcode_details))
+                            else:
+                                print('local save method will be added')
                         font = cv2.FONT_HERSHEY_SIMPLEX
                         cv2.putText(self.barcode_image, self.barcode_info, (x + 6, y - 6), font, 1.0, (255, 0, 0), 1)
                     if self.barcode_info:
@@ -80,20 +71,14 @@ class BarcodeReader():
                 
         self.cap.release()
         cv2.destroyAllWindows()
-        
-    def buttonEventHandler_falling(self):
-        self.button_last_timer = time.time()
-        
-    def buttonEventHandler_rising(self):
-        now = time.time()
-        if(now-self.button_last_timer >= self.timeout):
-            self.open_hotspot()
-            
-    def open_hotspot(self):
-        setup_lib.install_prereqs()
-        setup_lib.copy_configs(self.wpa_enabled_choice)
-        setup_lib.update_main_config_file(self.entered_ssid, self.auto_config_choice, self.auto_config_delay, self.ssl_enabled_choice, self.server_port_choice, self.wpa_enabled_choice, self.wpa_entered_key)
-        os.system('sudo reboot')
+
+              
+    def get_connection_status(self):
+        try:
+            IPRoute().route('get', dst='8.8.8.8')
+            return True
+        except:
+            return False
         
     def lights(self):
         self.pixels.wakeup()
@@ -163,15 +148,8 @@ class BarcodeReader():
 
 
 def main():
-    button = 17
-    entered_ssid = "SCANIIE"
-    wpa_enabled_choice = True
-    wpa_entered_key = "123456789"
-    auto_config_choice = False
-    auto_config_delay = ""
-    server_port_choice = 80
-    ssl_enabled_choice = False
-    barcode_reader = BarcodeReader(button, entered_ssid, wpa_enabled_choice, wpa_entered_key, auto_config_choice, auto_config_delay, server_port_choice, ssl_enabled_choice)
+    
+    barcode_reader = BarcodeReader()
     
 if __name__ == '__main__':
     main()
