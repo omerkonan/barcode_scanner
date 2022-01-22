@@ -9,13 +9,13 @@ import asyncio
 import numpy as np
 import urllib.request 
 from time import sleep
-from pyzbar import pyzbar
 import RPi.GPIO as GPIO
-from pixels import Pixels
-from azure.iot.device import Message
-from azure.iot.device.aio import IoTHubDeviceClient
-from device_provisioning_service import Device
+from pyzbar import pyzbar
 from pyroute2 import IPRoute
+from azure.iot.device.aio import IoTHubDeviceClient
+from pixels import Pixels
+# from azure.iot.device import Message
+# from device_provisioning_service import Device
 
 class BarcodeReader():
     def __init__(self):
@@ -23,6 +23,7 @@ class BarcodeReader():
         self.pixels = Pixels()
         self.pixels.off()
         self.lights()
+        self.unsend_barcode_info = None
         self.button_last_timer= None
         self.barcode_image = None
         self.barcode_info = None
@@ -50,13 +51,21 @@ class BarcodeReader():
                             self.last_read_barcode_info = self.barcode_info
                             self.pixels.think()
                             self.beepsound()
-                            is_online = get_connection_status()
+                            is_online = self.get_connection_status()
                             if (is_online):
+                                if self.unsend_barcode_info:
+                                    for local_barcode_infos in self.unsend_barcode_info:
+                                        self.getproductinfo(local_barcode_infos)
+                                        local_barcode_details = self.getproductinfo(self.barcode_info)
+                                        asyncio.run(self.iotsendmsg(local_barcode_details))
+                                                    
                                 self.getproductinfo(self.barcode_info)
                                 barcode_details = self.getproductinfo(self.barcode_info)
                                 asyncio.run(self.iotsendmsg(barcode_details))
                             else:
                                 print('local save method will be added')
+                                self.unsend_barcode_info.append(self.barcode_info)
+                                
                         font = cv2.FONT_HERSHEY_SIMPLEX
                         cv2.putText(self.barcode_image, self.barcode_info, (x + 6, y - 6), font, 1.0, (255, 0, 0), 1)
                     if self.barcode_info:

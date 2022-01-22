@@ -11,6 +11,7 @@ from azure.iot.device import Message
 from device_provisioning_service import Device
 import urllib.request
 from pixels import Pixels
+import pygame
 
 pixels = Pixels()
 pixels.off()
@@ -44,7 +45,6 @@ def pleasebeep():
         GPIO.output(buzzerPin, False)
 
 def beepsound():
-    import pygame
     pygame.mixer.init()
     pygame.mixer.music.load('/scaniie/final/beep.wav')
     pygame.mixer.music.play()
