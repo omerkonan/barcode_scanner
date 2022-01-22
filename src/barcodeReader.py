@@ -14,8 +14,8 @@ from pyzbar import pyzbar
 from pyroute2 import IPRoute
 from azure.iot.device.aio import IoTHubDeviceClient
 from pixels import Pixels
-# from azure.iot.device import Message
-# from device_provisioning_service import Device
+from azure.iot.device import Message
+from device_provisioning_service import Device
 
 class BarcodeReader():
     def __init__(self):
@@ -29,11 +29,11 @@ class BarcodeReader():
         self.barcode_info = None
         self.last_read_barcode_info = None
         self.cap = cv2.VideoCapture(0)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1080)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 960)
-        self.cap.set(cv2.CAP_PROP_FPS, 10)
-        print(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        print(self.cap.get(cv2.CAP_PROP_FPS ))
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 540)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        self.cap.set(cv2.CAP_PROP_FPS, 30)
+        #print(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        #print(self.cap.get(cv2.CAP_PROP_FPS ))
         while (self.cap.isOpened()):
             success, self.frame = self.cap.read()
             if (success):
@@ -51,6 +51,7 @@ class BarcodeReader():
                             self.last_read_barcode_info = self.barcode_info
                             self.pixels.think()
                             self.beepsound()
+                            self.pixels.off()
                             is_online = self.get_connection_status()
                             if (is_online):
                                 if self.unsend_barcode_info:
@@ -69,14 +70,14 @@ class BarcodeReader():
                         font = cv2.FONT_HERSHEY_SIMPLEX
                         cv2.putText(self.barcode_image, self.barcode_info, (x + 6, y - 6), font, 1.0, (255, 0, 0), 1)
                     if self.barcode_info:
-                        print("Barcode detected. Barcode: ", self.barcode_info)
+                        #print("Barcode detected. Barcode: ", self.barcode_info)
                         #cv2.imshow("barcode_image" ,self.barcode_image)  
                         
                           
-                self.barcode_info = None
-                #cv2.imshow("Frame" ,self.frame)
-                if cv2.waitKey(1) == ord('q'):
-                    break
+                        self.barcode_info = None
+                        #cv2.imshow("Frame" ,self.frame)
+                        if cv2.waitKey(1) == ord('q'):
+                            break
                 
         self.cap.release()
         cv2.destroyAllWindows()
@@ -97,7 +98,7 @@ class BarcodeReader():
         time.sleep(3)
         self.pixels.off()
         
-    def beepsound():
+    def beepsound(self):
         subprocess.call(['aplay scn_bp.wav'], shell = True)
 
     def pleasebeep(self):
@@ -115,7 +116,7 @@ class BarcodeReader():
         connection_string = "HostName=ScaniieProd.azure-devices.net;DeviceId=scndev;SharedAccessKey=ZhVQ0tDUhgICNPL2SKwGMR9MMtIr1GdXxpkIEZjyIuA="
         device_client = IoTHubDeviceClient.create_from_connection_string(connection_string)
         await device_client.connect()
-        print (msgtoaz)
+        #print (msgtoaz)
         # Send the message.
         await device_client.send_message(msgtoaz)
         # finally, disconnect
