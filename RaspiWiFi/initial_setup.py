@@ -21,7 +21,7 @@ wpa_enabled_choice = True # input("Would you like WPA encryption enabled on the 
 print()
 wpa_entered_key = "123456789"  #input("What password would you like to for WPA hotspot \naccess (if enabled above, \nMust be at least 8 characters) [default: NO PASSWORD]:")
 print()
-auto_config_choice = "False" # input("Would you like to enable \nauto-reconfiguration mode [y/N]?: ")
+auto_config_choice = False # input("Would you like to enable \nauto-reconfiguration mode [y/N]?: ")
 print()
 auto_config_delay = "300" # input("How long of a delay would you like without an active connection \nbefore auto-reconfiguration triggers (seconds)? [default: 300]: ")
 print()
