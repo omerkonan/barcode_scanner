@@ -1,9 +1,0 @@
-
-pip3 install --upgrade pip setuptools wheel
-pip3 install --upgrade pip
-pip3 install opencv-python==4.5.4.60
-pip3 install -U numpy
-pip3 install pyzbar
-pip3 install pyroute2
-pip3 install azure-iot-device
-pip3 install -r ./libs/mic_hat/requirements.txt
