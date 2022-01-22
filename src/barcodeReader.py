@@ -4,7 +4,7 @@
 import os
 import cv2
 import time
-import pygame
+import subprocess
 import asyncio
 import numpy as np
 import urllib.request 
@@ -70,11 +70,11 @@ class BarcodeReader():
                         cv2.putText(self.barcode_image, self.barcode_info, (x + 6, y - 6), font, 1.0, (255, 0, 0), 1)
                     if self.barcode_info:
                         print("Barcode detected. Barcode: ", self.barcode_info)
-                        cv2.imshow("barcode_image" ,self.barcode_image)  
+                        #cv2.imshow("barcode_image" ,self.barcode_image)  
                         
                           
                 self.barcode_info = None
-                cv2.imshow("Frame" ,self.frame)
+                #cv2.imshow("Frame" ,self.frame)
                 if cv2.waitKey(1) == ord('q'):
                     break
                 
@@ -97,10 +97,8 @@ class BarcodeReader():
         time.sleep(3)
         self.pixels.off()
         
-    def beepsound(self):
-        pygame.mixer.init()
-        pygame.mixer.music.load('/scaniie/final/beep.wav')
-        pygame.mixer.music.play()
+    def beepsound():
+        subprocess.call(['aplay scn_bp.wav'], shell = True)
 
     def pleasebeep(self):
         GPIO.setmode(GPIO.BCM)
@@ -124,7 +122,7 @@ class BarcodeReader():
         await device_client.disconnect()
 
     def getproductinfo(self, barcode):
-            request = urllib.request.urlopen('https://api.ean-search.org/api?token=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&op=barcode-lookup&format=json&ean=%s'% (barcode))    
+            request = urllib.request.urlopen('https://api.ean-search.org/api?token=5d0bcaaad5b03b9a3f06a3d170bf0998572765f1c0822075ff&op=barcode-lookup&format=json&ean=%s'% (barcode))    
             response_body = request.read()
             return(response_body.decode('utf-8'))
 
@@ -152,7 +150,7 @@ class BarcodeReader():
         pts2 = np.float32([[0, 0], [0+w, 0], [0, h], [w,h]])
         matrix = cv2.getPerspectiveTransform(pts1, pts2)
         self.barcode_image = cv2.warpPerspective(self.frame, matrix, (w,h))
-        cv2.imshow("img", self.barcode_image)
+        #cv2.imshow("img", self.barcode_image)
             
 
 
