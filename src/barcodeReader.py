@@ -15,7 +15,8 @@ from pyzbar import pyzbar
 from pyroute2 import IPRoute
 from libs.mic_hat.interfaces import pixels
 from azure.iot.device.aio import IoTHubDeviceClient
-
+from azure.iot.device import Message
+from device_provisioning_service import Device
 class BarcodeReader():
     def __init__(self):
 
