@@ -11,7 +11,7 @@ from azure.iot.device import Message
 from device_provisioning_service import Device
 import urllib.request
 from pixels import Pixels
-import subprocess
+import pygame
 
 pixels = Pixels()
 pixels.off()
@@ -28,7 +28,7 @@ async def iotsendmsg(msgtoaz):
     await device_client.disconnect()
 
 def getproductinfo(barcode):
-        request = urllib.request.urlopen('https://api.ean-search.org/api?token=5d0bcaaad5b03b9a3f06a3d170bf0998572765f1c0822075ff&op=barcode-lookup&format=json&ean=%s'% (barcode))    
+        request = urllib.request.urlopen('https://api.ean-search.org/api?token=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&op=barcode-lookup&format=json&ean=%s'% (barcode))    
         response_body = request.read()
         return(response_body.decode('utf-8'))
 
@@ -45,7 +45,9 @@ def pleasebeep():
         GPIO.output(buzzerPin, False)
 
 def beepsound():
-        subprocess.call(['aplay scn_bp.wav'], shell = True)
+    pygame.mixer.init()
+    pygame.mixer.music.load('/scaniie/final/beep.wav')
+    pygame.mixer.music.play()
 
 def lights():
     pixels.wakeup()
@@ -76,7 +78,6 @@ def getbarcode():
                 #pleasebeep()
                 pixels.think()
                 beepsound()
-                pixels.off()
                 getproductinfo(myData)
                 barcodeinfo = getproductinfo(myData)
                 asyncio.run(iotsendmsg(barcodeinfo))

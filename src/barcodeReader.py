@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import sys
+sys.path.append("..")
 import os
 import cv2
 import time
-import subprocess
 import asyncio
+import subprocess
 import numpy as np
 import urllib.request 
 from time import sleep
 import RPi.GPIO as GPIO
 from pyzbar import pyzbar
 from pyroute2 import IPRoute
+from libs.mic_hat.interfaces import pixels
 from azure.iot.device.aio import IoTHubDeviceClient
-from pixels import Pixels
 from azure.iot.device import Message
 from device_provisioning_service import Device
-
 class BarcodeReader():
     def __init__(self):
 
-        self.pixels = Pixels()
+        self.pixels = pixels.Pixels()
         self.pixels.off()
         self.lights()
         self.unsend_barcode_info = None
@@ -32,8 +32,8 @@ class BarcodeReader():
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 540)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.cap.set(cv2.CAP_PROP_FPS, 30)
-        #print(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        #print(self.cap.get(cv2.CAP_PROP_FPS ))
+        # print(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        # print(self.cap.get(cv2.CAP_PROP_FPS ))
         while (self.cap.isOpened()):
             success, self.frame = self.cap.read()
             if (success):
@@ -64,20 +64,20 @@ class BarcodeReader():
                                 barcode_details = self.getproductinfo(self.barcode_info)
                                 asyncio.run(self.iotsendmsg(barcode_details))
                             else:
-                                print('local save method will be added')
+                                # print('local save method will be added')
                                 self.unsend_barcode_info.append(self.barcode_info)
                                 
                         font = cv2.FONT_HERSHEY_SIMPLEX
                         cv2.putText(self.barcode_image, self.barcode_info, (x + 6, y - 6), font, 1.0, (255, 0, 0), 1)
                     if self.barcode_info:
-                        #print("Barcode detected. Barcode: ", self.barcode_info)
+                        print("Barcode detected. Barcode: ", self.barcode_info)
                         #cv2.imshow("barcode_image" ,self.barcode_image)  
                         
                           
-                        self.barcode_info = None
-                        #cv2.imshow("Frame" ,self.frame)
-                        if cv2.waitKey(1) == ord('q'):
-                            break
+                    self.barcode_info = None
+                    # cv2.imshow("Frame" ,self.frame)
+                    if cv2.waitKey(1) == ord('q'):
+                        break
                 
         self.cap.release()
         cv2.destroyAllWindows()
@@ -116,7 +116,7 @@ class BarcodeReader():
         connection_string = "HostName=ScaniieProd.azure-devices.net;DeviceId=scndev;SharedAccessKey=ZhVQ0tDUhgICNPL2SKwGMR9MMtIr1GdXxpkIEZjyIuA="
         device_client = IoTHubDeviceClient.create_from_connection_string(connection_string)
         await device_client.connect()
-        #print (msgtoaz)
+        # print (msgtoaz)
         # Send the message.
         await device_client.send_message(msgtoaz)
         # finally, disconnect
@@ -138,8 +138,6 @@ class BarcodeReader():
     def find_bigggest_contour(self):
         contours, _ = cv2.findContours(self.binary_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         biggest_cnt = max(contours, key = cv2.contourArea)
-        # hull = cv2.convexHull(c)
-        # cv2.drawContours(self.frame, [biggest_cnt], -1, (0, 255, 0), 3)   
         self.get_barcode_area(biggest_cnt)
         
         
@@ -151,7 +149,7 @@ class BarcodeReader():
         pts2 = np.float32([[0, 0], [0+w, 0], [0, h], [w,h]])
         matrix = cv2.getPerspectiveTransform(pts1, pts2)
         self.barcode_image = cv2.warpPerspective(self.frame, matrix, (w,h))
-        #cv2.imshow("img", self.barcode_image)
+        # cv2.imshow("img", self.barcode_image)
             
 
 
