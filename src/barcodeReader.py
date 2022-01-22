@@ -13,16 +13,16 @@ import RPi.GPIO as GPIO
 from pyzbar import pyzbar
 from pyroute2 import IPRoute
 from azure.iot.device.aio import IoTHubDeviceClient
-from pixels import Pixels
+# from pixels import Pixels
 # from azure.iot.device import Message
 # from device_provisioning_service import Device
 
 class BarcodeReader():
     def __init__(self):
 
-        self.pixels = Pixels()
-        self.pixels.off()
-        self.lights()
+        #self.pixels = Pixels()
+        #self.pixels.off()
+        #self.lights()
         self.unsend_barcode_info = None
         self.button_last_timer= None
         self.barcode_image = None
@@ -46,10 +46,10 @@ class BarcodeReader():
                         self.barcode_info = barcode.data.decode('utf-8')
                         if not self.barcode_info:
                             break
-                        self.pixels.off()
+                        # self.pixels.off()
                         if (self.barcode_info != self.last_read_barcode_info):
                             self.last_read_barcode_info = self.barcode_info
-                            self.pixels.think()
+                            # self.pixels.think()
                             self.beepsound()
                             is_online = self.get_connection_status()
                             if (is_online):
@@ -89,13 +89,13 @@ class BarcodeReader():
         except:
             return False
         
-    def lights(self):
-        self.pixels.wakeup()
-        self.pixels.think()
-        time.sleep(3)
-        self.pixels.speak()
-        time.sleep(3)
-        self.pixels.off()
+    # def lights(self):
+        # self.pixels.wakeup()
+        # self.pixels.think()
+        # time.sleep(3)
+        # self.pixels.speak()
+        # time.sleep(3)
+        # self.pixels.off()
         
     def beepsound(self):
         pygame.mixer.init()
